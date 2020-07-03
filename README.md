@@ -28,7 +28,7 @@ Just get a copy of the `.vbs` script, perhaps the `.cmd` too (for your easiness)
 
 Just edit the `.cmd` file and you'll see how it works: you just need to run the `.vbs` with one parameter, the name of the folder where your codebase is saved. Or, with a second parameter, the name of the file where code has to be imported.
 
-![demo](image/demo.png)
+![demo](./images/demo.png)
 
 ## How to use
 
