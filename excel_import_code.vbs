@@ -124,7 +124,7 @@ Class clsMSExcel
 
             End With
 
-            Set objShell = CreateObject("WScript.Shell")
+            Set objShell = CreateObject("wScript.Shell")
             objShell.appActivate oApplication.Caption
             Set objShell = Nothing
 
@@ -199,7 +199,7 @@ Class clsMSExcel
                     Set wb = Nothing
                 Else
                     If bVerbose Then
-                        wScript.echo "	Closing " & sBaseName & _
+                        wScript.echo "    Closing " & sBaseName & _
                             " (clsMSExcel::CloseFile)"
                     End If
                     ' Close without saving
@@ -343,6 +343,7 @@ End Class
 Dim cExcel
 Dim oApplication
 Dim objFSO, objFolder, objFiles, objFile
+Dim sFoldername, sFileName
 
 ' --------------------------------------------------------
 '
@@ -457,9 +458,14 @@ Private Sub processFile(sFileName, sSourcePath)
 
         ' No file to open ? Ok, create a new workbook
         Set wb = cExcel.app.Workbooks.Add
+        sFileName = wb.FullName
         wb.Activate
 
     End If
+
+    wScript.echo " Import files from " & sSourcePath
+    wScript.echo " into " & sFileName
+    wScript.echo ""
 
     With cExcel.app
 
@@ -475,8 +481,9 @@ Private Sub processFile(sFileName, sSourcePath)
 
                 sBaseName = objFSO.GetBaseName(objFile.Name)
 
-                Wscript.echo "Import " & sBaseName
+                wScript.echo " Import " & sBaseName
 
+                ' remove previous version if any
                 On error Resume Next
                 oVBComp.Remove .VBE.ActiveVBProject.VBComponents(sBaseName)
                 On error Goto 0
@@ -486,9 +493,14 @@ Private Sub processFile(sFileName, sSourcePath)
             End If
         Next
 
-        WScript.echo "All Forms, Modules, and Classes imported"
+        wScript.echo ""
+        wScript.echo " All Forms, Modules, and Classes imported"
+        wScript.echo ""
 
         '.ActiveWorkbook.Save 
+
+        ' Fake
+        .ActiveWorkbook.Saved = true 
 
     End with
 
@@ -496,19 +508,74 @@ Private Sub processFile(sFileName, sSourcePath)
 
 End Sub
 
+Sub ShowHelp()
+
+    wScript.echo " ============================"
+    wScript.echo " = Excel Import Code script ="
+    wScript.echo " ============================"
+    wScript.echo ""
+    wScript.echo " You need to tell where source file can be retrieved. Absolute or relative path."
+    wScript.echo ""
+    wScript.echo " This script will open Excel, create a new workbook and import all sources in that new file."
+    wScript.echo ""
+    wScript.echo "     " & wScript.ScriptName & " src\"
+    wScript.echo ""
+    wScript.echo " If you don't want to create a new workbook but use an existing one, "
+    wScript.echo " just specify his name as the second parameter."
+    wScript.echo ""
+    wScript.echo "      " & wScript.ScriptName & " src\ application.xlsm"
+    wScript.echo ""
+    wScript.quit
+
+End sub
+
 ' --------------------------------------------------------
 '
 ' ENTRY POINT
 '
 ' --------------------------------------------------------
 
-    Call initialization() 
+    ' Get the first argument
+    If (wScript.Arguments.Count = 0) Then
 
-    ' Instantiate Excel
-    Call instantiateExcel()
+        Call ShowHelp
 
-    'Call processFile("C:\temp\vbs_xls_import\demo.xlsm", "C:\temp\vbs_xls_import\src\")
-    Call processFile("", "C:\temp\vbs_xls_import\src\")
+    Else
 
-    call finalize()
- 
+        Call initialization() 
+
+        ' Folder where sources are located
+        sFoldername = Trim(Wscript.Arguments.Item(0))        
+        sFoldername = objFso.GetAbsolutePathName(sFoldername)
+
+        If Not (objFSO.FolderExists(sFoldername)) Then
+
+            wScript.echo "Error, the folder " & sFoldername & " didn't exists."
+            wScript.echo "Please make sure to mention an existing folder."
+            wScript.Quit
+
+        End If
+
+        sFileName = ""
+
+        If (wScript.Arguments.Count = 2) Then 
+
+            sFileName = Trim(Wscript.Arguments.Item(1))
+            sFileName = objFso.GetAbsolutePathName(sFileName)
+
+            If Not (objFSO.FileExists(sFileName)) Then
+                wScript.echo "Error, the file " & sFileName & " didn't exists."
+                wScript.echo "Please make sure to mention an existing file."
+                wScript.Quit
+            End If
+        End if
+
+        ' Instantiate Excel
+        Call instantiateExcel()
+
+        'Call processFile("C:\temp\vbs_xls_import\demo.xlsm", "C:\temp\vbs_xls_import\src\")
+        Call processFile(sFileName, sFolderName)
+
+        call finalize()
+        
+    End if
