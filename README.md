@@ -1,6 +1,6 @@
 # Import code to Excel
 
-![Banner](./images/banner.jpg)
+![Banner](./banner.svg)
 
 > Import external `.bas`, `.cls` and `.frm` files to an Excel workbook.
 
